@@ -144,9 +144,13 @@
 
     if (isPlayable(v)) {
       if (v.source.type === 'drive') {
-        frame.innerHTML = `<iframe src="https://drive.google.com/file/d/${encodeURIComponent(
+        const src = `https://drive.google.com/file/d/${encodeURIComponent(
           v.source.fileId
-        )}/preview" allow="autoplay; fullscreen; encrypted-media" allowfullscreen title="${esc(v.title)}"></iframe>`;
+        )}/preview`;
+        frame.innerHTML = `<div class="stage-wrap"><div class="stage"><iframe src="${src}" allow="autoplay; fullscreen; encrypted-media" allowfullscreen title="${esc(
+          v.title
+        )}"></iframe></div></div>`;
+        fitStage(frame);
       } else if (v.source.type === 'mp4') {
         frame.innerHTML = `<video controls playsinline preload="metadata" poster="${esc(v.poster || '')}">
             <source src="${esc(v.source.url)}" type="video/mp4" /></video>`;
@@ -178,5 +182,48 @@
     }
     chips.push('<a class="chip ok" href="/evaluation">تقييم اللقاء بعد المشاهدة ←</a>');
     $('#nowRow').innerHTML = chips.join('');
+
+    if (isPlayable(v)) {
+      frame.querySelectorAll('.fs-overlay').forEach((n) => n.remove());
+      const fsBtn = document.createElement('button');
+      fsBtn.type = 'button';
+      fsBtn.className = 'fs-overlay';
+      fsBtn.setAttribute('aria-label', 'ملء الشاشة');
+      fsBtn.innerHTML =
+        '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>';
+      fsBtn.addEventListener('click', () => {
+        const el = $('#playerFrame');
+        (el.requestFullscreen || el.webkitRequestFullscreen || (() => {})).call(el);
+      });
+      frame.appendChild(fsBtn);
+    }
+  }
+
+  /* -------- ضبط مقاس مشغّل درايف حتى لا يُقصّ الفيديو على الشاشات الصغيرة -------- */
+  const STAGE_W = 960;
+  const STAGE_H = 540;
+  let resizeObs = null;
+
+  function fitStage(frame) {
+    const stage = frame.querySelector('.stage');
+    if (!stage) return;
+    const apply = () => {
+      const w = frame.clientWidth;
+      const h = frame.clientHeight || 0;
+      if (!w) return;
+      const s = Math.min(w / STAGE_W, (h || STAGE_H) / STAGE_H);
+      stage.style.transform = `scale(${s})`;
+      stage.style.top = `${Math.max(0, (h - STAGE_H * s) / 2)}px`;
+      stage.style.right = `${Math.max(0, (w - STAGE_W * s) / 2)}px`;
+    };
+    apply();
+    if (resizeObs) resizeObs.disconnect();
+    if (typeof ResizeObserver !== 'undefined') {
+      resizeObs = new ResizeObserver(apply);
+      resizeObs.observe(frame);
+    }
+    window.addEventListener('resize', apply);
+    window.addEventListener('orientationchange', () => setTimeout(apply, 250));
+    document.addEventListener('fullscreenchange', () => setTimeout(apply, 250));
   }
 })();
