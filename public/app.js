@@ -40,19 +40,45 @@
       if (site.shortTitle) $('#footTitle').textContent = site.shortTitle;
       if (site.organizer) $('#brandSub').textContent = site.organizer;
 
-      const trainers = data.trainers || [];
+      const trainers = (data.trainers || []).map((t) =>
+        typeof t === 'string' ? { name: t } : t
+      );
       if (trainers.length) {
         const sec = document.getElementById('trainers');
         sec.hidden = false;
         document.getElementById('trainersStrip').innerHTML = trainers
-          .map((name) => {
-            const initials = String(name).replace(/^(م|أ|د)\.\s*/, '').trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('');
+          .map((t) => {
+            const initials = String(t.name || '')
+              .replace(/^(م|أ|د)\.\s*/, '')
+              .trim()
+              .split(/\s+/)
+              .slice(0, 2)
+              .map((w) => w[0])
+              .join('');
+            const avatar = t.photo
+              ? `<span class="avatar"><img src="${esc(t.photo)}" alt="${esc(t.name || '')}" loading="lazy" /></span>`
+              : `<span class="avatar">${esc(initials)}</span>`;
             return `<div class="trainer-card">
-              <span class="avatar">${esc(initials)}</span>
-              <span><b>${esc(name)}</b><span>مدرب اللقاء</span></span>
+              ${avatar}
+              <span class="trainer-info">
+                <b>${esc(t.name || '')}</b>
+                ${t.nameEn ? `<span class="en">${esc(t.nameEn)}</span>` : ''}
+                <span>${esc(t.role || 'مدرب اللقاء')}</span>
+              </span>
             </div>`;
           })
           .join('');
+      }
+
+      // سطر موعد اللقاء
+      const meta = document.getElementById('heroMeta');
+      if (meta && site.lectureDate) {
+        meta.innerHTML = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 11h18"/></svg> ${esc(site.lectureDate)}`;
+        meta.hidden = false;
+      }
+      const credit = document.getElementById('footCredit');
+      if (credit && data.credit) {
+        credit.innerHTML = `${esc(data.credit.label || '')} <b>${esc(data.credit.name || '')}</b>`;
       }
 
       const tools = data.tools || [];

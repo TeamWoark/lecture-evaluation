@@ -237,6 +237,7 @@ app.get('/api/config', (req, res) => {
     site: config.site,
     trainers: config.trainers || [],
     tools: config.tools || [],
+    credit: config.credit || null,
     videos: (config.videos || []).filter((v) => v.visible !== false),
     questions: QUESTIONS,
     dimensions: DIMENSIONS,

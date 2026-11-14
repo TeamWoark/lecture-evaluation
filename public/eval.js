@@ -31,7 +31,10 @@
         const box = $('#trainerChips');
         box.hidden = false;
         box.innerHTML =
-          '<span class="lbl">المدربون:</span> ' + trainers.map((t) => `<span class="chip">${esc(t)}</span>`).join('');
+          '<span class="lbl">المدربون:</span> ' +
+          trainers
+            .map((t) => `<span class="chip">${esc(typeof t === 'string' ? t : t.name)}</span>`)
+            .join('');
       }
 
       if (data.evaluationOpen === false) {

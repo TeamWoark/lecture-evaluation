@@ -7,13 +7,28 @@
     "heroBadge": "مدارس جيل الإبداع — القسم الأمريكي",
     "logoMark": "AI",
     "organizer": "مدارس جيل الإبداع · فريق الحاسب",
-    "lectureDate": "السبت 2026-11-14 · 10:00 صباحًا",
+    "lectureDate": "السبت 14 نوفمبر 2026 · 10:00 ص – 12:00 م · أونلاين",
     "evaluationOpen": true
   },
   "trainers": [
-    "م. محمود منصور",
-    "أ. سالم شطا",
-    "أ. أحمد حجازي"
+    {
+      "name": "أ. سالم شطا",
+      "nameEn": "Mr. Salem Shata",
+      "role": "مدرب اللقاء",
+      "photo": "/media/trainers/salem.jpg"
+    },
+    {
+      "name": "أ. أحمد حجازي",
+      "nameEn": "Mr. Ahmed Hegazi",
+      "role": "مدرب اللقاء",
+      "photo": "/media/trainers/ahmed.jpg"
+    },
+    {
+      "name": "م. محمود منصور",
+      "nameEn": "Eng. Mahmoud Mansour",
+      "role": "مدرب اللقاء",
+      "photo": "/media/trainers/mahmoud.jpg"
+    }
   ],
   "videos": [
     {
@@ -152,5 +167,9 @@
       "letter": "Q",
       "color": "#8854d0"
     }
-  ]
+  ],
+  "credit": {
+    "label": "برمجة وتطوير الموقع",
+    "name": "مستر سالم شطا"
+  }
 }
