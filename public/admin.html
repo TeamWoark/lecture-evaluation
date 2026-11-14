@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>لوحة التحكم — نتائج التقييم</title>
+<meta name="robots" content="noindex, nofollow" />
+<link rel="stylesheet" href="/style.css" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230b1120'/%3E%3Ctext x='32' y='42' font-size='24' font-family='Arial' font-weight='bold' fill='white' text-anchor='middle'%3E%D8%A3%3C/text%3E%3C/svg%3E" />
+</head>
+<body class="admin-body">
+
+<!-- ============================ شاشة الدخول ============================ -->
+<div class="login-shell" id="loginScreen">
+  <div class="login-card fade-in">
+    <div style="display:flex;align-items:center;gap:.7rem;margin-bottom:1.2rem">
+      <span class="mark" style="width:44px;height:44px;display:grid;place-items:center;border-radius:13px;background:linear-gradient(135deg,#4f46e5,#06b6d4);color:#fff;font-weight:800">أ</span>
+      <div>
+        <div style="font-weight:800;font-size:15px">لوحة تحكم الأدمن</div>
+        <div style="font-size:12.5px;color:var(--muted)">نتائج تقييم اللقاء التدريبي</div>
+      </div>
+    </div>
+    <h1>تسجيل الدخول</h1>
+    <p>أدخل كلمة مرور الأدمن للوصول إلى الردود والتحليلات.</p>
+    <form id="loginForm">
+      <label for="password">كلمة المرور</label>
+      <input type="password" id="password" autocomplete="current-password" placeholder="••••••••" required />
+      <button type="submit" class="btn btn-primary" style="width:100%;margin-top:1rem" id="loginBtn">دخول</button>
+      <div class="error-box" id="loginError" style="display:none"></div>
+    </form>
+    <p style="margin:1.2rem 0 0;font-size:12px;color:var(--muted);text-align:center">
+      الوصول مخصص لإدارة اللقاء فقط · <a href="/">العودة للموقع</a>
+    </p>
+  </div>
+</div>
+
+<!-- ============================== الداشبورد ============================= -->
+<div id="dashboard" style="display:none">
+  <div class="admin-top">
+    <div class="container inner">
+      <div class="brand">
+        <span class="mark" style="width:38px;height:38px;display:grid;place-items:center;border-radius:11px;background:linear-gradient(135deg,#4f46e5,#06b6d4);color:#fff;font-weight:800;font-size:13px">أ</span>
+        <span class="txt"><span id="dashTitle">نتائج تقييم اللقاء</span><small>لوحة تحكم الأدمن</small></span>
+      </div>
+      <div class="actions">
+        <div class="range-tabs" id="rangeTabs">
+          <button data-range="all" class="active">كل الوقت</button>
+          <button data-range="7">آخر 7 أيام</button>
+          <button data-range="30">آخر 30 يومًا</button>
+        </div>
+        <button class="btn btn-ghost btn-sm" id="refreshBtn">↻ تحديث</button>
+        <a class="btn btn-ghost btn-sm" href="/api/admin/export.csv" id="exportBtn">⬇ تصدير CSV</a>
+        <a class="btn btn-ghost btn-sm" href="/" target="_blank" rel="noopener">↗ الموقع</a>
+        <button class="btn btn-ghost btn-sm" id="logoutBtn">خروج</button>
+      </div>
+    </div>
+  </div>
+
+  <main class="container" style="padding:1.5rem 0 3rem">
+    <div id="loading" class="panel" style="text-align:center;color:var(--muted)">جارٍ تحميل البيانات…</div>
+
+    <div id="content" style="display:none">
+      <!-- KPIs -->
+      <div class="kpi-grid" id="kpis" style="margin-bottom:1rem"></div>
+
+      <!-- الأبعاد + الاتجاه الزمني -->
+      <div class="grid-2" style="margin-bottom:1rem">
+        <div class="panel">
+          <h3>متوسط التقييم حسب المحور</h3>
+          <p class="panel-sub">مقياس من 1 إلى 4 — كلما اقترب المؤشر من 4 كان الأداء أفضل.</p>
+          <div id="dims"></div>
+        </div>
+        <div class="panel">
+          <h3>توزيع الردود الزمني</h3>
+          <p class="panel-sub" id="trendSub">عدد الردود المستلمة لكل يوم (آخر 14 يومًا).</p>
+          <div id="trend"></div>
+        </div>
+      </div>
+
+      <!-- تفصيل الأسئلة -->
+      <div class="panel" style="margin-bottom:1rem">
+        <h3>تفصيل الأسئلة العشرة</h3>
+        <p class="panel-sub">المتوسط لكل سؤال وتوزيع الإجابات (1 ضعيف جدًا → 4 ممتاز).</p>
+        <div id="qDetail"></div>
+        <div class="legend">
+          <span><i class="seg-1"></i> 1 ضعيف جدًا</span>
+          <span><i class="seg-2"></i> 2 ضعيف</span>
+          <span><i class="seg-3"></i> 3 جيد</span>
+          <span><i class="seg-4"></i> 4 ممتاز</span>
+        </div>
+      </div>
+
+      <!-- الملاحظات -->
+      <div class="panel" style="margin-bottom:1rem">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap">
+          <div>
+            <h3>الملاحظات النهائية</h3>
+            <p class="panel-sub" style="margin-bottom:0">ما كتبه المشاركون في خانة الملاحظات الاختيارية.</p>
+          </div>
+          <input type="search" id="notesSearch" placeholder="بحث في الملاحظات…" style="max-width:280px" />
+        </div>
+        <div class="notes-list" id="notesList" style="margin-top:1rem"></div>
+      </div>
+
+      <!-- الجدول الخام -->
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap">
+          <div>
+            <h3>سجل الردود</h3>
+            <p class="panel-sub" style="margin-bottom:0">كل الردود بدون أي بيانات شخصية — يمكن حذف أي رد عند الحاجة.</p>
+          </div>
+          <button class="btn btn-ghost btn-sm" id="toggleRaw">إظهار/إخفاء الجدول</button>
+        </div>
+        <div id="rawWrap" style="display:none;margin-top:1rem;overflow-x:auto"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="/admin.js"></script>
+</body>
+</html>

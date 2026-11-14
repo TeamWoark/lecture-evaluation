@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: lecture-evaluation
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /api/stats/public
+    autoDeploy: true
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      - key: SUPABASE_TABLE
+        value: evaluations

@@ -1,0 +1,156 @@
+{
+  "site": {
+    "title": "اللقاء التدريبي: الذكاء الاصطناعي في التعليم",
+    "shortTitle": "الذكاء الاصطناعي في التعليم",
+    "subtitle": "رحلة تفاعلية لاستكشاف أقوى النماذج الذكية والجيل الجديد من المنصات — شاهد أجزاء اللقاء ثم شاركنا تقييمك",
+    "description": "منصة اللقاء التدريبي تجمع أجزاء المحاضرة في مكان واحد، وتتيح لك تقييم المحتوى العلمي والمدربين ووقت التدريب في أقل من دقيقتين، بشكل مجهول تمامًا.",
+    "heroBadge": "مدارس جيل الإبداع — القسم الأمريكي",
+    "logoMark": "AI",
+    "organizer": "مدارس جيل الإبداع · فريق الحاسب",
+    "lectureDate": "السبت 2026-11-14 · 10:00 صباحًا",
+    "evaluationOpen": true
+  },
+  "trainers": [
+    "م. محمود منصور",
+    "أ. سالم شطا",
+    "أ. أحمد حجازي"
+  ],
+  "videos": [
+    {
+      "id": "part-1",
+      "title": "PART 1",
+      "description": "الجزء الأول من اللقاء — مقدمة: الذكاء الاصطناعي في التعليم وأقوى النماذج الذكية.",
+      "source": {
+        "type": "drive",
+        "fileId": "1DbOybHixZ16yL9xyvMEc3azOgUuG5WV5"
+      },
+      "duration": "36:58",
+      "visible": true
+    },
+    {
+      "id": "part-2",
+      "title": "PART 2",
+      "description": "الجزء الثاني — تطبيق عملي على الأدوات والمنصات الذكية.",
+      "source": {
+        "type": "drive",
+        "fileId": "1fArUaAMzWbDvdgGJSAYHK77NjeYDam7C"
+      },
+      "duration": "27:20",
+      "visible": true
+    },
+    {
+      "id": "part-3",
+      "title": "PART 3",
+      "description": "الجزء الثالث — تجربة تفاعلية مباشرة على منصة Arena وتوليد الأنشطة.",
+      "source": {
+        "type": "drive",
+        "fileId": "1zpJWPVOUVQncWeU1n4-zDF8N4u5JTuRb"
+      },
+      "duration": "39:17",
+      "visible": true
+    }
+  ],
+  "auth": {
+    "secret": "16ed6cf80ab4ab491189f14f46f6b83f9e47516ca8a57d51fe9720d5dbfd9ca2",
+    "password_hash": "scrypt$0f18d644d38f33a9c7cf3f14d4ee6c08$9336f6c7d357e5a274fc6ec89aecd50c420d2410585885a00540ac21afc8a946bfc69c14e717ddcdc33f428f926a9e9d192ed719a246c977cc3ca63d7d8274b7"
+  },
+  "evaluationOpen": true,
+  "tools": [
+    {
+      "name": "ChatGPT",
+      "url": "https://chatgpt.com",
+      "desc": "مساعد ذكي للشرح وتوليد الأفكار وبناء خطط الدروس.",
+      "tag": "نماذج ذكية",
+      "letter": "G",
+      "color": "#10a37f"
+    },
+    {
+      "name": "Arena AI",
+      "url": "https://arena.ai",
+      "desc": "منصة لبناء تطبيقات وأنشطة تفاعلية بالذكاء الاصطناعي.",
+      "tag": "بناء تطبيقات",
+      "letter": "A",
+      "color": "#6366f1"
+    },
+    {
+      "name": "Google Gemini",
+      "url": "https://gemini.google.com",
+      "desc": "مساعد جوجل متعدد الوسائط للتحليل والكتابة والصور.",
+      "tag": "نماذج ذكية",
+      "letter": "G",
+      "color": "#4285f4"
+    },
+    {
+      "name": "NotebookLM",
+      "url": "https://notebooklm.google.com",
+      "desc": "تحويل مستنداتك إلى ملخصات وخرائط ذهنية وبودكاست.",
+      "tag": "مصادر وملخصات",
+      "letter": "N",
+      "color": "#1a73e8"
+    },
+    {
+      "name": "Claude",
+      "url": "https://claude.ai",
+      "desc": "مساعد قوي في التحليل الطويل وكتابة التقارير التعليمية.",
+      "tag": "نماذج ذكية",
+      "letter": "C",
+      "color": "#d97757"
+    },
+    {
+      "name": "Canva Magic Studio",
+      "url": "https://www.canva.com",
+      "desc": "تصميم عروض وأنشطة بصرية بالذكاء الاصطناعي.",
+      "tag": "تصميم",
+      "letter": "C",
+      "color": "#00c4cc"
+    },
+    {
+      "name": "Gamma",
+      "url": "https://gamma.app",
+      "desc": "إنشاء عروض تقديمية احترافية من فكرة واحدة.",
+      "tag": "عروض تقديمية",
+      "letter": "γ",
+      "color": "#8b5cf6"
+    },
+    {
+      "name": "Napkin AI",
+      "url": "https://www.napkin.ai",
+      "desc": "تحويل النصوص إلى رسوم ومخططات توضيحية جاهزة.",
+      "tag": "مخططات",
+      "letter": "N",
+      "color": "#0ea5e9"
+    },
+    {
+      "name": "Suno",
+      "url": "https://suno.com",
+      "desc": "توليد أغاني وأناشيد تعليمية بالذكاء الاصطناعي.",
+      "tag": "صوت وموسيقى",
+      "letter": "S",
+      "color": "#f59e0b"
+    },
+    {
+      "name": "ElevenLabs",
+      "url": "https://elevenlabs.io",
+      "desc": "تحويل النص إلى صوت بشري طبيعي بعدة لغات.",
+      "tag": "صوت",
+      "letter": "E",
+      "color": "#111827"
+    },
+    {
+      "name": "Perplexity",
+      "url": "https://www.perplexity.ai",
+      "desc": "محرك بحث ذكي يجيب بمصادر موثوقة.",
+      "tag": "بحث",
+      "letter": "P",
+      "color": "#20b8cd"
+    },
+    {
+      "name": "Quizizz",
+      "url": "https://quizizz.com",
+      "desc": "اختبارات وألعاب صفية تفاعلية مع تحليل النتائج.",
+      "tag": "تقييم تفاعلي",
+      "letter": "Q",
+      "color": "#8854d0"
+    }
+  ]
+}

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>تقييم اللقاء — منصة اللقاء التدريبي</title>
+<meta name="description" content="استبيان تقييم اللقاء التدريبي — مجهول بالكامل." />
+<link rel="stylesheet" href="/style.css" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%234f46e5'/%3E%3Ctext x='32' y='42' font-size='26' font-family='Arial' font-weight='bold' fill='white' text-anchor='middle'%3EAI%3C/text%3E%3C/svg%3E" />
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container inner">
+    <a class="brand" href="/">
+      <span class="mark" id="brandMark">AI</span>
+      <span class="txt">
+        <span id="brandTitle">اللقاء التدريبي</span>
+        <small>منصة الفيديوهات والتقييم</small>
+      </span>
+    </a>
+    <nav class="nav">
+      <a href="/">الرئيسية</a>
+      <a href="/#videos">الفيديوهات</a>
+      <a href="/evaluation" class="active nav-cta">تقييم اللقاء</a>
+    </nav>
+  </div>
+</header>
+
+<div class="eval-progress">
+  <div class="container inner">
+    <span class="progress-label" id="progressLabel">0 / 10</span>
+    <div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
+    <span class="progress-label" style="color:var(--muted);font-weight:600" id="progressHint">أجب عن جميع الأسئلة</span>
+  </div>
+</div>
+
+<main class="section" style="padding-top:0">
+  <div class="container eval-wrap">
+
+    <div id="intro">
+      <span class="eyebrow">استبيان التقييم</span>
+      <h1 style="font-size:clamp(1.5rem,2.8vw,2.1rem);margin-bottom:.5rem">تقييم اللقاء التدريبي</h1>
+      <p style="color:var(--muted);max-width:65ch">
+        10 أسئلة تغطّي المادة العلمية، المدربين، ووقت التدريب. مقياس التقييم من <b>1</b> إلى <b>4</b>
+        (1 = ضعيف جدًا، 2 = ضعيف، 3 = جيد، 4 = ممتاز).
+      </p>
+    </div>
+
+    <div id="trainerChips" class="trainer-chips" hidden></div>
+
+    <div class="notice">
+      <span style="flex:0 0 auto;color:#0891b2"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="4" y="10" width="16" height="10" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span>
+      <div><b>تقييمك مجهول تمامًا.</b> لا نطلب الاسم أو البريد الإلكتروني أو أي بيانات تعريفية، وتُحفظ الإجابات لأغراض تحسين التدريب فقط.</div>
+    </div>
+
+    <form id="evalForm" novalidate>
+      <div id="questions"></div>
+
+      <div class="card" style="margin-top:1.5rem">
+        <h3 style="font-size:1.05rem;margin-bottom:.25rem">ملاحظات نهائية <span class="chip gray" style="font-weight:600">اختياري</span></h3>
+        <p class="hint" style="margin-bottom:.8rem">أضف أي اقتراح أو ملاحظة تود مشاركتها حول اللقاء، المحتوى، أو المدربين.</p>
+        <textarea id="notes" maxlength="2000" placeholder="اكتب ملاحظاتك هنا… (اختياري)"></textarea>
+        <div class="hint" style="display:flex;justify-content:space-between">
+          <span>لا تكتب أي بيانات شخصية إن كنت لا ترغب بذلك.</span>
+          <span id="notesCount">0 / 2000</span>
+        </div>
+      </div>
+
+      <div class="form-foot">
+        <div class="hint" id="formMsg">الأسئلة العشرة مطلوبة جميعها.</div>
+        <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">إرسال التقييم</button>
+      </div>
+    </form>
+
+    <div id="thanks" style="display:none">
+      <div class="card thanks">
+        <div class="check">✓</div>
+        <h2 style="margin-bottom:.4rem">شكرًا لك! تم استلام تقييمك</h2>
+        <p style="color:var(--muted);max-width:48ch;margin-inline:auto">
+          نقدّر وقتك ومساهمتك في تحسين اللقاءات القادمة. إجاباتك محفوظة بشكل مجهول تمامًا.
+        </p>
+        <div class="hero-actions" style="justify-content:center;margin-top:1.5rem">
+          <a href="/#videos" class="btn btn-ghost">العودة إلى الفيديوهات</a>
+          <a href="/" class="btn btn-soft">الصفحة الرئيسية</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="container inner">
+    <div>© <span id="year"></span> منصة اللقاء التدريبي</div>
+    <div><a href="/">الرئيسية</a> · <a href="/admin">لوحة التحكم</a></div>
+  </div>
+</footer>
+
+<script src="/eval.js"></script>
+</body>
+</html>

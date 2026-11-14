@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ملصق تقييم اللقاء — QR</title>
+<meta name="robots" content="noindex" />
+<link rel="stylesheet" href="/style.css" />
+</head>
+<body class="qr-page">
+
+<div class="print-bar">
+  <a href="/" class="btn btn-ghost btn-sm">← العودة للموقع</a>
+  <button class="btn btn-primary btn-sm" onclick="window.print()">
+    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8V3h10v5"/><rect x="4" y="8" width="16" height="8" rx="2"/><path d="M7 16h10v5H7z"/></svg>
+    طباعة الملصق</button>
+</div>
+
+<div class="poster">
+  <div class="p-school">مدارس جيل الإبداع — القسم الأمريكي · فريق الحاسب</div>
+
+  <h1>اللقاء التدريبي: الذكاء الاصطناعي في التعليم</h1>
+  <p class="p-sub">شاركنا رأيك في اللقاء — استبيان من 10 أسئلة يستغرق أقل من دقيقتين</p>
+
+  <div class="p-qr" id="qrPoster"></div>
+
+  <p class="p-scan">امسح الكود بالكاميرا وقيّم اللقاء</p>
+  <p style="margin:.6rem 0 0"><span class="p-url" id="evalUrl">/evaluation</span></p>
+
+  <div class="p-steps">
+    <span class="p-step"><i>1</i> امسح الكود بكاميرا الجوال</span>
+    <span class="p-step"><i>2</i> أجب عن 10 أسئلة (1 – 4)</span>
+    <span class="p-step"><i>3</i> أرسل — بدون اسم أو بيانات</span>
+  </div>
+
+  <div class="p-foot">التقييم مجهول تمامًا · تُستخدم النتائج لتحسين اللقاءات القادمة</div>
+</div>
+
+<script src="/vendor/qrcode.js"></script>
+<script>
+  (function () {
+    var url = window.location.origin + '/evaluation';
+    document.getElementById('evalUrl').textContent = url.replace(/^https?:\/\//, '');
+    var host = document.getElementById('qrPoster');
+    try {
+      var qr = qrcode(0, 'M');
+      qr.addData(url);
+      qr.make();
+      host.innerHTML = qr.createSvgTag({ cellSize: 8, margin: 16, scalable: true });
+    } catch (e) {
+      host.innerHTML = '<span style="font-size:12px;color:#64748b">تعذّر توليد الكود</span>';
+    }
+  })();
+</script>
+</body>
+</html>

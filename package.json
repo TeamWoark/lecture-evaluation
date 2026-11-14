@@ -1,0 +1,21 @@
+{
+  "name": "lecture-site",
+  "version": "1.0.0",
+  "private": true,
+  "description": "منصة اللقاء التدريبي — فيديوهات المحاضرة + استبيان تقييم مجهول + لوحة تحكم أدمن",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "seed": "node scripts/seed-demo.js",
+    "clear-data": "node -e \"require('fs').writeFileSync('data/responses.json','[]')\"",
+    "set-password": "node scripts/set-password.js",
+    "qr": "echo الملصق على /qr"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
