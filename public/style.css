@@ -661,3 +661,11 @@ input[type="password"], input[type="text"], input[type="search"] {
 @media print {
   .admin-top, .range-tabs, .btn { display: none !important; }
 }
+
+/* شريط حالة التخزين في لوحة الأدمن */
+.store-ok, .store-warn {
+  font-size: 12.5px; font-weight: 600; padding: .6rem .9rem; border-radius: 12px;
+  border: 1px solid transparent; line-height: 1.7;
+}
+.store-ok { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
+.store-warn { background: #fff7ed; color: #b45309; border-color: #fed7aa; }

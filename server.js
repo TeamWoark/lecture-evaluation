@@ -70,12 +70,25 @@ if (!config.auth.password_hash) {
 }
 
 /* ------------------------------------------------------------------ */
-/*  الطبقة التخزينية: ملف JSON محلي + نسخ اختياري إلى Supabase         */
+/*  الطبقة التخزينية: Supabase هي المخزن الدائم (أساسي)                  */
+/*  - مفتاح الخدمة (خدمي) إن وُجد، وإلا المفتاح العام anon عبر RLS+RPC    */
+/*  - ملف JSON محلي = طابور احتياطي مؤقت فقط (لا يُعتمد عليه)            */
+/*  - أي رد لا يُحفظ في Supabase يبقى معلَّمًا غير مُزامَن ويُعاد إرساله   */
 /* ------------------------------------------------------------------ */
-const SUPABASE_URL = (process.env.SUPABASE_URL || '').replace(/\/$/, '');
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY || '';
+const DEFAULT_SUPABASE_URL = 'https://yxzqadwsvjezqslhlrup.supabase.co';
+// المفتاح العام (anon) — مفتاح عام بطبيعته: قراءته مسموحة لكن الكتابة محدودة
+// بسياسة RLS (insert فقط) والقراءة/الحذف تمرّان عبر RPC محمي بكلمة مرور الأدمن.
+const PUBLIC_ANON_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4enFhZHdzdmplenFzbGhscnVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQyNTE1OTksImV4cCI6MjEwOTgyNzU5OX0.w1aDgbJ-KJ32TVpxFOvR_a8sa82vxxgcccB3YzfL8Cc';
+const SUPABASE_URL = (process.env.SUPABASE_URL || DEFAULT_SUPABASE_URL).replace(/\/$/, '');
+const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || '';
+const SUPABASE_KEY = SERVICE_KEY || process.env.SUPABASE_ANON_KEY || PUBLIC_ANON_KEY;
 const SUPABASE_TABLE = process.env.SUPABASE_TABLE || 'evaluations';
+const HAS_SERVICE = Boolean(SERVICE_KEY);
 const useSupabase = Boolean(SUPABASE_URL && SUPABASE_KEY);
+const STORE_MODE = useSupabase ? (HAS_SERVICE ? 'supabase-service' : 'supabase-anon-rpc') : 'local';
+// كلمة المرور المستخدمة لاستدعاء RPC المحمية (تُملأ من جلسة الأدمن أو البيئة)
+const FALLBACK_ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 
 function ensureData() {
   if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -96,49 +109,134 @@ function writeLocal(rows) {
   fs.renameSync(tmp, DATA_PATH);
 }
 
-async function supabaseRequest(method, query = '', body) {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}${query}`, {
+async function sbFetch(pathAndQuery, { method = 'GET', body, prefer } = {}) {
+  const res = await fetch(`${SUPABASE_URL}${pathAndQuery}`, {
     method,
     headers: {
       apikey: SUPABASE_KEY,
       Authorization: `Bearer ${SUPABASE_KEY}`,
       'Content-Type': 'application/json',
-      Prefer: 'return=representation',
+      Prefer: prefer || 'return=representation',
     },
-    body: body ? JSON.stringify(body) : undefined,
+    body: body === undefined ? undefined : JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(`Supabase ${res.status}: ${await res.text()}`);
-  return res.status === 204 ? null : res.json();
+  const text = await res.text();
+  if (!res.ok) throw new Error(`Supabase ${res.status}: ${text.slice(0, 300)}`);
+  if (!text) return null;
+  try { return JSON.parse(text); } catch { return text; }
 }
 
+/* كل عملية تُنفَّذ بالخدمي إن توفّر، وإلا بالمفتاح العام + RPC محمي */
+async function sbInsert(row) {
+  return sbFetch(`/rest/v1/${SUPABASE_TABLE}`, {
+    method: 'POST',
+    // return=minimal: لا نحتاج قراءة الصف بعد الإدخال (لا سياسة SELECT للمفتاح العام)
+    prefer: 'return=minimal',
+    body: {
+      id: row.id,
+      created_at: row.created_at,
+      answers: row.answers,
+      notes: row.notes || '',
+      duration_seconds: row.duration_seconds || 0,
+    },
+  });
+}
+
+async function sbList(adminPassword) {
+  if (HAS_SERVICE) {
+    const rows = await sbFetch(`/rest/v1/${SUPABASE_TABLE}?select=*&order=created_at.asc`);
+    return Array.isArray(rows) ? rows : [];
+  }
+  const rows = await sbFetch('/rest/v1/rpc/admin_data', {
+    method: 'POST',
+    body: { p_password: adminPassword || FALLBACK_ADMIN_PASSWORD },
+  });
+  if (rows === null) {
+    const err = new Error('كلمة مرور الأدمن لا تطابق كلمة المرور في قاعدة البيانات');
+    err.code = 'AUTH_MISMATCH';
+    throw err;
+  }
+  return Array.isArray(rows) ? rows : [];
+}
+
+async function sbDelete(id, adminPassword) {
+  if (HAS_SERVICE) {
+    await sbFetch(`/rest/v1/${SUPABASE_TABLE}?id=eq.${encodeURIComponent(id)}`, { method: 'DELETE' });
+    return true;
+  }
+  const ok = await sbFetch('/rest/v1/rpc/admin_delete', {
+    method: 'POST',
+    body: { p_password: adminPassword || FALLBACK_ADMIN_PASSWORD, p_id: id },
+  });
+  if (ok !== true) throw new Error('فشل الحذف — تحقّق من كلمة مرور الأدمن في قاعدة البيانات');
+  return true;
+}
+
+async function sbCount() {
+  try {
+    const n = await sbFetch('/rest/v1/rpc/eval_count', { method: 'POST', body: {} });
+    return typeof n === 'number' ? n : null;
+  } catch {
+    return null;
+  }
+}
+
+/* حفظ الرد: Supabase أولًا (دائم)، والملف المحلي طابور احتياط مؤقت */
 async function addResponse(row) {
-  // 1) محليًا (مصدر أساسي يعمل دائمًا)
-  const rows = readLocal();
-  rows.push(row);
-  writeLocal(rows);
-  // 2) نسخة احتياطية على Supabase إن كانت مفعّلة
-  if (useSupabase) {
+  let saved = false;
+  let lastErr = null;
+  for (let attempt = 0; attempt < 3 && !saved; attempt += 1) {
     try {
-      await supabaseRequest('POST', '', {
-        id: row.id,
-        created_at: row.created_at,
-        answers: row.answers,
-        notes: row.notes,
-        duration_seconds: row.duration_seconds,
-      });
+      await sbInsert(row);
+      saved = true;
     } catch (err) {
-      console.error('[supabase] فشل حفظ الرد:', err.message);
+      lastErr = err;
+      await new Promise((r) => setTimeout(r, 300 * (attempt + 1)));
     }
   }
-  return row;
+
+  const rows = readLocal();
+  rows.push({ ...row, demo: false, synced: saved });
+  writeLocal(rows);
+
+  if (!saved) {
+    console.error('[storage] تعذّر الحفظ في Supabase — الرد محفوظ محليًا كطابور مؤقت:', lastErr && lastErr.message);
+  } else {
+    // أزل أي نسخة معلّقة سابقة لنفس المعرّف
+    console.log('[storage] تم حفظ الرد في Supabase:', row.id);
+  }
+  return { ...row, saved };
 }
 
-async function listResponses() {
+/* إعادة إرسال الردود غير المُزامنة إلى Supabase */
+async function flushPending() {
+  const rows = readLocal();
+  const pending = rows.filter((r) => r.demo !== true && r.synced === false);
+  if (!pending.length) return 0;
+  let done = 0;
+  for (const r of pending) {
+    try {
+      await sbInsert(r);
+      r.synced = true;
+      done += 1;
+    } catch (err) {
+      console.error('[storage] فشل رفع رد معلّق:', r.id, err.message);
+      break;
+    }
+  }
+  if (done) writeLocal(rows);
+  return done;
+}
+
+async function listResponses(adminPassword) {
   const local = readLocal();
+  const pending = local.filter((r) => r.demo !== true && r.synced === false);
+  const demo = local.filter((r) => r.demo === true);
+
   if (useSupabase) {
     try {
-      const remote = await supabaseRequest('GET', '?select=*&order=created_at.asc');
-      const mapped = (Array.isArray(remote) ? remote : []).map((r) => ({
+      const remote = await sbList(adminPassword);
+      const mapped = remote.map((r) => ({
         id: r.id,
         created_at: r.created_at,
         answers: r.answers,
@@ -146,14 +244,17 @@ async function listResponses() {
         duration_seconds: r.duration_seconds || 0,
         demo: false,
       }));
-      // الردود التجريبية (لعرض الشكل فقط) تُدمج مع الردود الحقيقية
-      const demo = local.filter((r) => r.demo === true);
-      return [...mapped, ...demo].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+      const seen = new Set(mapped.map((r) => r.id));
+      const missing = pending.filter((r) => !seen.has(r.id));
+      return [...mapped, ...missing, ...demo].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
     } catch (err) {
-      console.error('[supabase] تعذّر جلب الردود:', err.message);
+      console.error('[storage] تعذّر الجلب من Supabase:', err.message);
+      if (err.code === 'AUTH_MISMATCH') throw err;
     }
   }
-  return local;
+  return [...local.filter((r) => r.demo !== true), ...demo].sort(
+    (a, b) => new Date(a.created_at) - new Date(b.created_at)
+  );
 }
 
 /* ------------------------------------------------------------------ */
@@ -211,6 +312,8 @@ function checkToken(token) {
   if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) return false;
   return Number(expires) > Date.now();
 }
+// جلسات الأدمن: رمز الكوكي → كلمة المرور (لازمة لاستدعاء RPC المحمية)
+const sessionPasswords = new Map();
 function parseCookies(req) {
   const out = {};
   (req.headers.cookie || '').split(';').forEach((part) => {
@@ -220,8 +323,12 @@ function parseCookies(req) {
   return out;
 }
 function requireAdmin(req, res, next) {
-  if (checkToken(parseCookies(req)[COOKIE_NAME])) return next();
-  res.status(401).json({ error: 'غير مصرح — يرجى تسجيل الدخول' });
+  const token = parseCookies(req)[COOKIE_NAME];
+  if (!checkToken(token) || !sessionPasswords.has(token)) {
+    return res.status(401).json({ error: 'غير مصرح — يرجى تسجيل الدخول' });
+  }
+  req.adminPassword = sessionPasswords.get(token);
+  return next();
 }
 
 /* ------------------------------------------------------------------ */
@@ -249,11 +356,24 @@ app.get('/api/config', (req, res) => {
 app.get('/api/stats/public', async (req, res) => {
   // رقم عام بسيط (بدون أي بيانات شخصية) لتشجيع المشاركة
   try {
+    const n = await sbCount();
+    if (typeof n === 'number') return res.json({ count: n });
     const rows = await listResponses();
-    res.json({ count: rows.filter((r) => !r.demo).length });
+    return res.json({ count: rows.filter((r) => !r.demo).length });
   } catch {
     res.json({ count: 0 });
   }
+});
+
+/* --- حالة التخزين (تشخيص) --------------------------------------- */
+app.get('/api/health', async (req, res) => {
+  const n = await sbCount();
+  res.json({
+    ok: true,
+    storage: STORE_MODE,
+    supabase: { url: SUPABASE_URL, table: SUPABASE_TABLE, reachable: n !== null, rows: n },
+    pendingLocal: readLocal().filter((r) => r.demo !== true && r.synced === false).length,
+  });
 });
 
 app.post('/api/evaluate', async (req, res) => {
@@ -295,53 +415,62 @@ app.post('/api/admin/login', (req, res) => {
   if (!verifyPassword(password, config.auth.password_hash)) {
     return res.status(401).json({ error: 'كلمة المرور غير صحيحة' });
   }
+  const token = makeToken();
+  sessionPasswords.set(token, String(password));
   res.setHeader(
     'Set-Cookie',
-    `${COOKIE_NAME}=${makeToken()}; HttpOnly; Path=/; Max-Age=${SESSION_TTL_MS / 1000}; SameSite=Lax`
+    `${COOKIE_NAME}=${token}; HttpOnly; Path=/; Max-Age=${SESSION_TTL_MS / 1000}; SameSite=Lax`
   );
   res.json({ ok: true });
 });
 
 app.post('/api/admin/logout', (req, res) => {
+  sessionPasswords.delete(parseCookies(req)[COOKIE_NAME]);
   res.setHeader('Set-Cookie', `${COOKIE_NAME}=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax`);
   res.json({ ok: true });
 });
 
 app.get('/api/admin/data', requireAdmin, async (req, res) => {
-  const rows = await listResponses();
-  res.json({ rows, questions: QUESTIONS, dimensions: DIMENSIONS, scale: SCALE });
+  try {
+    await flushPending();
+    const rows = await listResponses(req.adminPassword);
+    res.json({
+      rows,
+      questions: QUESTIONS,
+      dimensions: DIMENSIONS,
+      scale: SCALE,
+      storage: STORE_MODE,
+      pending: readLocal().filter((r) => r.demo !== true && r.synced === false).length,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.delete('/api/admin/responses/:id', requireAdmin, async (req, res) => {
-  const rows = readLocal();
-  const isDemo = rows.some((r) => r.id === req.params.id && r.demo === true);
-  const next = rows.filter((r) => r.id !== req.params.id);
-  if (next.length === rows.length) {
-    // قد يكون الرد في Supabase فقط
-    if (useSupabase) {
-      try {
-        await supabaseRequest('DELETE', `?id=eq.${encodeURIComponent(req.params.id)}`);
-      } catch (err) {
-        return res.status(500).json({ error: err.message });
-      }
-    } else {
-      return res.status(404).json({ error: 'الرد غير موجود' });
+  const id = req.params.id;
+  try {
+    const rows = readLocal();
+    const target = rows.find((r) => r.id === id);
+    const next = rows.filter((r) => r.id !== id);
+
+    if (target && target.demo === true) {
+      // رد تجريبي محلي فقط
+      writeLocal(next);
+      return res.json({ ok: true, scope: 'local-demo' });
     }
-  } else {
+
+    // احذف من قاعدة البيانات أولًا (المصدر الدائم)
+    await sbDelete(id, req.adminPassword);
     writeLocal(next);
-    if (useSupabase && !isDemo) {
-      try {
-        await supabaseRequest('DELETE', `?id=eq.${encodeURIComponent(req.params.id)}`);
-      } catch (err) {
-        console.error('[supabase]', err.message);
-      }
-    }
+    return res.json({ ok: true, scope: 'supabase' });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
   }
-  res.json({ ok: true });
 });
 
 app.get('/api/admin/export.csv', requireAdmin, async (req, res) => {
-  const rows = await listResponses();
+  const rows = await listResponses(req.adminPassword);
   const header = ['#', 'التاريخ والوقت', ...QUESTIONS.map((q) => q.text), 'الملاحظات'];
   const lines = [header.map(csvCell).join(',')];
   rows.forEach((row, i) => {
@@ -376,8 +505,10 @@ app.get('/admin', (req, res) => res.sendFile(path.join(ROOT, 'public', 'admin.ht
 
 app.use((req, res) => res.status(404).sendFile(path.join(ROOT, 'public', '404.html')));
 
+setInterval(() => { flushPending().catch(() => {}); }, 60 * 1000);
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ الموقع يعمل على http://localhost:${PORT}`);
   console.log(`   لوحة التحكم: http://localhost:${PORT}/admin`);
-  console.log(`   التخزين: ${useSupabase ? 'Supabase (' + SUPABASE_URL + ' → ' + SUPABASE_TABLE + ')' : 'محلي (data/responses.json)'}`);
+  console.log(`   التخزين الدائم: ${useSupabase ? 'Supabase (' + SUPABASE_URL + ' → ' + SUPABASE_TABLE + '، ' + STORE_MODE + ')' : 'محلي فقط ⚠️'}`);
 });

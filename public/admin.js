@@ -22,6 +22,25 @@
   };
 
 
+  /* ------------------------- حالة التخزين --------------------------- */
+  function renderStoreBar() {
+    const bar = document.getElementById('storeBar');
+    if (!bar) return;
+    const durable = String(DATA.storage || '').startsWith('supabase');
+    const pending = Number(DATA.pending || 0);
+    let html = '';
+    if (durable) {
+      html += `<div class="store-ok">🔒 الحفظ الدائم مفعّل (Supabase) — الردود محفوظة في قاعدة البيانات ولا تتأثر بإعادة نشر الموقع.</div>`;
+    } else {
+      html += `<div class="store-warn">⚠️ تحذير: الردود تُحفظ محليًا فقط وستضيع عند إعادة تشغيل/نشر الموقع. راجع إعدادات التخزين.</div>`;
+    }
+    if (pending > 0) {
+      html += `<div class="store-warn" style="margin-top:.5rem">⏳ ${pending} رد بانتظار المزامنة مع قاعدة البيانات — سيُرفع تلقائيًا عند عودة الاتصال.</div>`;
+    }
+    bar.innerHTML = html;
+    bar.style.display = 'block';
+  }
+
   /* ------------------------------ الجلسة ------------------------------ */
   fetch('/api/admin/session')
     .then((r) => r.json())
@@ -100,6 +119,7 @@
       if (res.status === 401) return showLogin();
       const data = await res.json();
       DATA = data;
+      renderStoreBar();
       if (DATA.rows.length === 0) {
         $('#loading').innerHTML =
           `<div class="empty-state"><div class="ico">${BIG.chart}</div>لا توجد ردود بعد — ستظهر التحليلات هنا بمجرد وصول أول تقييم.</div>`;
